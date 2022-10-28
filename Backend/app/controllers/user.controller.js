@@ -81,7 +81,9 @@ const login=async(req,res)=>{
 
 
   const getCoupons=async(req,res)=>{
-    const accesstoken=req.headers.authorization || req.headers.Authorization;
+    let accesstoken=req.headers.authorization || req.headers.Authorization;
+    accesstoken = accesstoken.split('Bearer ');
+    accesstoken = accesstoken[1];
     if(!accesstoken){
       return res.status(400).json({msg:"Missing accesstoken"});
      }
@@ -89,8 +91,39 @@ const login=async(req,res)=>{
      if(!user){
       return res.status(400).json({msg:"user is not valid"})
      }
-     return res.status(200).json({coupons:user.coupens ?? []});
+     let discount=0;
+     if(user.coupens){
+     user.coupens.forEach((coupon)=>{
+      if(coupon.id==req.query.code){
+        discount=coupon.discountValue
+      }
+     })
+     }
+     return res.status(200).json({discountValue:discount});
   }
 
-  module.exports={signUp,login,logout,getCoupons};
+
+  const bookShow =async(req,res)=>{
+    const {coupon_code,show_id,tickets}=req.body.bookingRequest;
+    const reference_number=Math.floor(Math.random()*90000) + 10000;
+    let accesstoken=req.headers.authorization || req.headers.Authorization;
+    accesstoken = accesstoken.split('Bearer ');
+    accesstoken = accesstoken[1];
+    if(!accesstoken){
+      return res.status(400).json({msg:"Missing accesstoken"});
+     }
+     const user= await User.findOne({accesstoken});
+     if(!user){
+      return res.status(400).json({msg:"user is not valid"})
+     }
+    
+     let newbooking=user.bookingRequests?[...user.bookingRequests]:[];
+     newbooking.push({coupon_code,reference_number,tickets,show_id})
+     
+     const result = await User.findByIdAndUpdate(user._id,{
+      bookingRequests:newbooking,
+    });
+   return res.status(201).json({reference_number});
+  }
+  module.exports={signUp,login,logout,getCoupons,bookShow};
   

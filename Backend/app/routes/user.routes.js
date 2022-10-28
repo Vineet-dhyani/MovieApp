@@ -9,6 +9,7 @@ module.exports=(app)=>{
     router.post('/signup',userController.signUp);
     router.post('/login',userController.login); 
     router.post('/logout',userController.logout);
-    router.get('/getCouponCode',userController.getCoupons);
+    router.get('/coupons',userController.getCoupons);
+    router.post('/bookings',userController.bookShow)
     app.use("/api/auth",router);
 }
